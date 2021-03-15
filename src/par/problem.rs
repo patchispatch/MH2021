@@ -1,8 +1,9 @@
 use na::{DVector, MatrixMN, Dynamic};
 use std::vec::Vec;
 use std::fs::*;
-
 use std::io::{BufReader, BufRead};
+use std::fmt::{Display, Formatter, Result};
+
 use super::Cluster;
 
 // Custom types
@@ -22,11 +23,11 @@ impl Problem {
     /// # Arguments
     /// - data_file: &str - Path to a data file
     /// - constraints_file: &str - Path to a constraint file
-    pub fn from_files(data_file: &str, constraints_file: &str) -> Problem {
+    pub fn from_files(data_file: &str, constraints_file: &str, cl_number: usize) -> Problem {
         // Attributes
         let mut clu = Vec::new();
         let mut points = Vec::new();
-        let mut cons: Matrix<i8>;
+        let cons: Matrix<i8>;
 
         // Open data file
         let data = File::open(data_file).expect("Data file not found");
@@ -64,12 +65,14 @@ impl Problem {
         }
 
         // Create Matrix from array of rows
-         // Initialize constraint matrix with the problem dimensions
-         cons = Matrix::from_columns(columns.as_slice());
-        
-        
-        // TODO: generate clusters
-        
+        // Initialize constraint matrix with the problem dimensions
+        cons = Matrix::from_columns(columns.as_slice());
+
+        // Create clusters
+        let point_size = points[0].len();
+        for _ in 0..cl_number {
+            clu.push(Cluster::new(point_size));
+        }
         
         // Returns a Problem
         Problem {
@@ -77,5 +80,18 @@ impl Problem {
             data: points,
             constraints: cons,
         } 
+    }
+}
+
+// Display trait
+impl Display for Problem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let s = format!("Problem{{\n\tClusters: [\n{0}\n],\nData: [\n\t{1} elements\n],\nConstraints: [\n\t{2} constraints\n]\n}}",
+            self.clusters.iter().fold(String::new(), |acc, x| acc + &x.to_string() + ", \n"),
+            self.data.len(),
+            self.constraints.len(),
+        );
+
+        write!(f, "{}", s)
     }
 }

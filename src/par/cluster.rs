@@ -22,7 +22,7 @@ impl Cluster {
     /// Creates a new empty cluster
     /// # Parameters
     /// - psize: u8 - Size of points in the problem
-    pub fn new(psize: u8) -> Cluster {
+    pub fn new(psize: usize) -> Cluster {
         let random_centroid: Vec<f64> = (0..psize).map(|_| random()).collect();
 
         Cluster {
@@ -36,6 +36,6 @@ impl Cluster {
 impl fmt::Display for Cluster {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let elements_to_str = self.elements.iter().fold(String::new(), |acc, &x| acc + &x.to_string() + ", "); 
-        write!(f, "Cluster(centroid: {}, intra-cluster distance: {}, elements: {})", self.centroid, self.intra_cluster_dist, elements_to_str)  
+        write!(f, "Cluster(centroid: {},\nintra-cluster distance: {},\nelements: [{}]", self.centroid, self.intra_cluster_dist, elements_to_str)  
     }
 }
