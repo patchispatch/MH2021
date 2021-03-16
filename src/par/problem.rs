@@ -16,6 +16,7 @@ pub struct Problem {
     clusters: Vec<Cluster>,
     data: Vec<Point>,
     constraints: Matrix<i8>,
+    k: usize,
 }
 
 impl Problem {
@@ -79,7 +80,14 @@ impl Problem {
             clusters: clu,
             data: points,
             constraints: cons,
+            k: cl_number,
         } 
+    }
+
+    /// Returns a solution with the greedy COPKM
+    /// Returns a vector of clusters
+    fn greedy(&self) -> Vec<Cluster> {
+        self.clusters.clone()
     }
 }
 
