@@ -4,7 +4,7 @@
 //! - centroid: Point - Current centroid
 //! - intra_cluster_distance: f64 - Saved intra-cluster distance
 //! - elements: HashSet<u32> - Set of element indexes (not Points)
-//! - size: usize - Dimension of the problem
+//! - dimension: usize - Dimension of the problem
 
 // use statements
 use std::collections::HashSet;
@@ -18,58 +18,69 @@ pub type Point = DVector<f64>;
 
 
 /// Represents a cluster
+#[derive(Clone)]
 pub struct Cluster {
     centroid: Point,
     intra_cluster_dist: f64,
     elements: HashSet<usize>,
-    size: usize,
+    dimension: usize,
 }
 
 impl Cluster {
     /// Creates a new empty cluster
     /// # Parameters
-    /// - psize: u8 - Size of points in the problem
-    pub fn new(psize: usize) -> Cluster {
+    /// - dim: u8 - Dimension of points in the problem
+    pub fn new(dim: usize) -> Cluster {
         Cluster {
-            centroid: Point::zeros(psize),
+            centroid: Point::zeros(dim),
             intra_cluster_dist: 0.0, 
             elements: HashSet::new(),
-            size: psize,
+            dimension: dim,
         }
     }
 
     /// Randomizes the centroid
-    fn randomize_centroid(&self) {
-        let random_centroid: Vec<f64> = (0..self.size).map(|_| random()).collect();
+    pub fn randomize_centroid(&mut self) {
+        let random_centroid: Vec<f64> = (0..self.dimension).map(|_| random()).collect();
         self.centroid = Point::from(random_centroid);
     }
 
     /// Sets a new centroid
     /// # Arguments
     /// - c: Point - The new centroid
-    fn set_centroid(&self, c: Point) {
+    pub fn set_centroid(&mut self, c: Point) {
         self.centroid = c;
     }
 
     /// Inserts a new element into the cluster
     /// # Arguments
     /// - e: usize - Index of an element
-    fn insert(&self, e: usize) -> bool {
+    pub fn insert(&mut self, e: usize) -> bool {
         self.elements.insert(e)
     }
 
     /// Removes an element from the cluster
     /// # Arguments
     /// - e: usize - Index of an element
-    fn remove(&self, e: usize) -> bool {
+    pub fn remove(&mut self, e: usize) -> bool {
         self.elements.remove(&e)
     }
 
     /// Removes and returns a value from the cluster
     /// # Arguments
     /// - e: usize - Index of an element
-    fn take(&self, e: usize) -> Option<usize> {
+    pub fn take(&mut self, e: usize) -> Option<usize> {
         self.elements.take(&e)
+    }
+
+    /// Returns a reference to the elements set
+    pub fn elements(&self) -> &HashSet<usize> {
+        &self.elements
+    }
+
+    /// Returns a reference to the centroid
+    pub fn centroid(&self) -> &Point {
+        &self.centroid
     }
 }
 
@@ -79,10 +90,3 @@ impl fmt::Display for Cluster {
         write!(f, "Cluster(centroid: {},\nintra-cluster distance: {},\nelements: [{}]", self.centroid, self.intra_cluster_dist, elements_to_str)  
     }
 }
-
-// TODO: implement Clone trait
-/*
-impl std::clone::Clone for Cluster {
-    
-}
-*/

@@ -81,13 +81,47 @@ impl Problem {
             data: points,
             constraints: cons,
             k: cl_number,
-        } 
+        }
     }
 
     /// Returns a solution with the greedy COPKM
     /// Returns a vector of clusters
     fn greedy(&self) -> Vec<Cluster> {
         self.clusters.clone()
+    }
+
+
+    // Functions
+
+    /// Given a cluster, returns its intra-cluster distance
+    /// # Arguments
+    /// - clu: &Cluster - Cluster to calculate
+    fn intra_cluster_distance(&self, clu: &Cluster) -> f64 {
+        // Accumulate distances
+        let mut dist = clu.elements()
+            .iter()
+            .fold(0.0, |acc, &x| {
+                acc + clu.centroid().metric_distance(self.data.get(x).unwrap())
+            });
+
+        // Return mean
+        dist / clu.elements().len() as f64
+    }
+
+    /// Returns the general deviation of the current partition
+    fn general_deviation(&self) -> f64 {
+        // Accumulate distances
+        let deviation = self.clusters.iter()
+            .fold(0.0, |acc, x| acc + self.intra_cluster_distance(&x));
+
+        // Return mean
+        deviation / self.k as f64
+    }
+
+    /// Returns the infeasibility of a cluster
+    // TODO: infeasibility function
+    fn infeasibility(&self, clu: &Cluster) -> i32 {
+        4
     }
 }
 
