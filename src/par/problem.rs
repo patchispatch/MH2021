@@ -16,6 +16,7 @@ pub struct Problem {
     clusters: Vec<Cluster>,
     data: Vec<Point>,
     constraints: Matrix<i8>,
+    dist_buf: Matrix<f64>,
     k: usize,
 }
 
@@ -29,6 +30,7 @@ impl Problem {
         let mut clu = Vec::new();
         let mut points = Vec::new();
         let cons: Matrix<i8>;
+        let dist: Matrix<f64>;
 
         // Open data file
         let data = File::open(data_file).expect("Data file not found");
@@ -74,12 +76,17 @@ impl Problem {
         for _ in 0..cl_number {
             clu.push(Cluster::new(point_size));
         }
+
+        // Initialize distance buffer to 0
+        let elements = points.len();
+        dist = Matrix::zeros(elements, elements);
         
         // Returns a Problem
         Problem {
             clusters: clu,
             data: points,
             constraints: cons,
+            dist_buf: dist,
             k: cl_number,
         }
     }
@@ -90,9 +97,6 @@ impl Problem {
         self.clusters.clone()
     }
 
-
-    // Functions
-
     /// Given a cluster, returns its intra-cluster distance
     /// # Arguments
     /// - clu: &Cluster - Cluster to calculate
@@ -100,9 +104,7 @@ impl Problem {
         // Accumulate distances
         let dist = clu.elements()
             .iter()
-            .fold(0.0, |acc, &x| {
-                acc + clu.centroid().metric_distance(self.data.get(x).unwrap())
-            });
+            .fold(0.0, |acc, &x|acc + clu.centroid().metric_distance(self.data.get(x).unwrap()));
 
         // Return mean
         dist / clu.elements().len() as f64
@@ -118,10 +120,12 @@ impl Problem {
         deviation / self.k as f64
     }
 
-    /// Returns the infeasibility of a cluster
+    /// Returns the infeasibility of a cluster using a constraint matrix
     // TODO: infeasibility function
-    fn infeasibility(&self, clu: &Cluster) -> i32 {
-        4
+    fn infeasibility_by_matrix(&self, clu: &Cluster) -> i32 {
+        let inf;
+        
+        inf
     }
 }
 
