@@ -22,7 +22,6 @@ pub type Point = DVector<f64>;
 pub struct Cluster {
     centroid: Point,
     intra_cluster_dist: f64,
-    infeasibility: i32,
     elements: HashSet<usize>,
     dimension: usize,
 }
@@ -35,7 +34,6 @@ impl Cluster {
         Cluster {
             centroid: Point::zeros(dim),
             intra_cluster_dist: 0.0,
-            infeasibility: 0,
             elements: HashSet::new(),
             dimension: dim,
         }

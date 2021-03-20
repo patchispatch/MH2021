@@ -16,7 +16,7 @@ pub struct Problem {
     clusters: Vec<Cluster>,
     data: Vec<Point>,
     constraints: Matrix<i8>,
-    dist_buf: Matrix<f64>,
+    infeasibility: usize,
     k: usize,
 }
 
@@ -30,7 +30,7 @@ impl Problem {
         let mut clu = Vec::new();
         let mut points = Vec::new();
         let cons: Matrix<i8>;
-        let dist: Matrix<f64>;
+        let inf: usize = 0;
 
         // Open data file
         let data = File::open(data_file).expect("Data file not found");
@@ -61,6 +61,8 @@ impl Problem {
         for line in reader.lines() {
             let c = line.unwrap();
 
+            // TODO: implementar map
+
             if !c.is_empty() {
                 let c: Vec<i8> = c.split(",").map(|i| i.parse().unwrap()).collect();
                 columns.push(Column::from(c));  
@@ -77,16 +79,12 @@ impl Problem {
             clu.push(Cluster::new(point_size));
         }
 
-        // Initialize distance buffer to 0
-        let elements = points.len();
-        dist = Matrix::zeros(elements, elements);
-        
         // Returns a Problem
         Problem {
             clusters: clu,
             data: points,
             constraints: cons,
-            dist_buf: dist,
+            infeasibility: inf,
             k: cl_number,
         }
     }
@@ -104,7 +102,7 @@ impl Problem {
         // Accumulate distances
         let dist = clu.elements()
             .iter()
-            .fold(0.0, |acc, &x|acc + clu.centroid().metric_distance(self.data.get(x).unwrap()));
+            .fold(0.0, |acc, &x| acc + clu.centroid().metric_distance(self.data.get(x).unwrap()));
 
         // Return mean
         dist / clu.elements().len() as f64
@@ -120,13 +118,40 @@ impl Problem {
         deviation / self.k as f64
     }
 
-    /// Returns the infeasibility of a cluster using a constraint matrix
-    // TODO: infeasibility function
-    fn infeasibility_by_matrix(&self, clu: &Cluster) -> i32 {
-        let inf;
+    /// Returns the infeasibility increment of inserting an element into a cluster 
+    /// using a constraint matrix
+    /// #Arguments
+    /// - element: i32 - Index of an element
+    /// - clu: &Cluster - Cluster to check
+    /// # Return value
+    /// Infeasibiility increment introducing the value
+    fn inf_insert(&self, element: usize, clu: usize) -> usize {
+        let mut inf = 0;
+
+        for (cl_i, cl) in self.clusters.iter().enumerate() {
+            // Cannot link
+            if cl_i == clu {
+                for &i in cl.elements() {
+                    if self.constraints[(i, element)] == -1 {
+                        inf += 1;
+                    }
+                }
+            }
+            // Must link
+            else {
+                for &i in cl.elements() {
+                    if self.constraints[(i, element)] == 1 {
+                        inf += 1;
+                    }
+                }
+            }
+        }
         
+        // Return value
         inf
     }
+
+
 }
 
 // Display trait
