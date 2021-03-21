@@ -90,7 +90,22 @@ impl Problem {
 
     /// Returns a solution with the greedy COPKM
     /// Returns a vector of clusters
+    // TODO: greedy
     fn greedy(&self) -> Vec<Cluster> {
+        // Step 1: create k empty clusters with a random centroid
+
+        // Step 2: Shuffle element indexes
+
+        // Step 3: for every element
+        //  - Calculate infeasibility increment of assigning to each cluster
+        //  - Of the clusters with lesser infeasibility increment, select the nearest
+
+        // Step 4: for every cluster
+        //  - Calculate new centroid with the assigned elements
+
+        // Step 5: check if there isn't any more changes
+
+        // Return partition as a Vec<Cluster>
         self.clusters.clone()
     }
 
@@ -139,7 +154,7 @@ impl Problem {
             // Must link
             else {
                 for &i in cl.elements() {
-                    if self.constraints[&(i, element)] == 1 { 
+                    if self.constraints[&(i, element)] == 1 {
                         inf += 1;
                     }
                 }
@@ -149,8 +164,6 @@ impl Problem {
         // Return value
         inf
     }
-
-
 }
 
 // Display trait
