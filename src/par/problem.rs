@@ -1,5 +1,6 @@
 use na::{DVector, MatrixMN, Dynamic};
 use std::vec::Vec;
+use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufReader, BufRead};
 use std::fmt::{Display, Formatter, Result};
@@ -15,7 +16,7 @@ pub type Matrix<T> = MatrixMN<T, Dynamic, Dynamic>;
 pub struct Problem {
     clusters: Vec<Cluster>,
     data: Vec<Point>,
-    constraints: Matrix<i8>,
+    constraints: HashMap<(usize, usize), i8>,
     infeasibility: usize,
     k: usize,
 }
@@ -29,7 +30,7 @@ impl Problem {
         // Attributes
         let mut clu = Vec::new();
         let mut points = Vec::new();
-        let cons: Matrix<i8>;
+        let mut cons = HashMap::new();
         let inf: usize = 0;
 
         // Open data file
@@ -57,21 +58,19 @@ impl Problem {
         // The constraints file represents the constraint matrix
         println!("Reading file {}", constraints_file);
 
-        let mut columns = Vec::new();
-        for line in reader.lines() {
+        for (ln, line) in reader.lines().enumerate() {
             let c = line.unwrap();
 
-            // TODO: implementar map
-
             if !c.is_empty() {
-                let c: Vec<i8> = c.split(",").map(|i| i.parse().unwrap()).collect();
-                columns.push(Column::from(c));  
+                for (i, val) in c.split(",").skip(ln).map(|x| x.parse::<i8>().unwrap()).enumerate() {
+                    cons.insert((ln, i), val);
+
+                    if ln != i {
+                        cons.insert((i, ln), val);
+                    }
+                }
             }
         }
-
-        // Create Matrix from array of rows
-        // Initialize constraint matrix with the problem dimensions
-        cons = Matrix::from_columns(columns.as_slice());
 
         // Create clusters
         let point_size = points[0].len();
@@ -132,7 +131,7 @@ impl Problem {
             // Cannot link
             if cl_i == clu {
                 for &i in cl.elements() {
-                    if self.constraints[(i, element)] == -1 {
+                    if self.constraints[&(i, element)] == -1 { 
                         inf += 1;
                     }
                 }
@@ -140,7 +139,7 @@ impl Problem {
             // Must link
             else {
                 for &i in cl.elements() {
-                    if self.constraints[(i, element)] == 1 {
+                    if self.constraints[&(i, element)] == 1 { 
                         inf += 1;
                     }
                 }
