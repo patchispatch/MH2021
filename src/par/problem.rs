@@ -12,6 +12,10 @@ pub type Point = DVector<f64>;
 pub type Column = DVector<i8>;
 pub type Matrix<T> = MatrixMN<T, Dynamic, Dynamic>;
 
+// TODO: Timer
+
+// TODO: csv
+
 
 pub struct Problem {
     clusters: Vec<Cluster>,
@@ -163,6 +167,13 @@ impl Problem {
         
         // Return value
         inf
+    }
+
+
+    /// Calculates the new centroid of a cluster
+    // TODO: centroid
+    fn calc_centroid(&self, clu: &Cluster) -> Point {
+
     }
 }
 
