@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufReader, BufRead};
 use std::fmt::{Display, Formatter, Result};
-
+use rand_pcg::Pcg64;
 use super::Cluster;
 
 // Custom types
@@ -95,8 +95,10 @@ impl Problem {
     /// Returns a solution with the greedy COPKM
     /// Returns a vector of clusters
     // TODO: greedy
-    fn greedy(&self) -> Vec<Cluster> {
+    pub fn greedy(&mut self, rng: &mut Pcg64) -> Vec<Cluster> {
         // Step 1: create k empty clusters with a random centroid
+        let dimension = self.data[0].len();
+        self.clusters = (0..dimension).map(|_| Cluster::new_rand(dimension, rng)).collect();
 
         // Step 2: Shuffle element indexes
 
@@ -173,7 +175,7 @@ impl Problem {
     /// Calculates the new centroid of a cluster
     // TODO: centroid
     fn calc_centroid(&self, clu: &Cluster) -> Point {
-
+        unimplemented!();
     }
 }
 

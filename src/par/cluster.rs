@@ -9,9 +9,10 @@
 // use statements
 use std::collections::HashSet;
 use std::fmt;
-use rand::random;
+use rand::Rng;
 use na::DVector;
 use std::option::Option;
+use rand_pcg::Pcg64;
 
 // Custom types
 pub type Point = DVector<f64>;
@@ -29,7 +30,7 @@ pub struct Cluster {
 impl Cluster {
     /// Creates a new empty cluster
     /// # Parameters
-    /// - dim: u8 - Dimension of points in the problem
+    /// - dim: usize - Dimension of points in the problem
     pub fn new(dim: usize) -> Cluster {
         Cluster {
             centroid: Point::zeros(dim),
@@ -39,9 +40,25 @@ impl Cluster {
         }
     }
 
+    /// Creates a new empty cluster with a randomized centroid
+    /// # Arguments
+    /// - dim: usize - Dimension of points in the problem
+    pub fn new_rand(dim: usize, rng: &mut Pcg64) -> Cluster {
+        let mut new_cluster = Cluster {
+            centroid: Point::zeros(dim),
+            intra_cluster_dist: 0.0,
+            elements: HashSet::new(),
+            dimension: dim,
+        };
+
+        new_cluster.randomize_centroid(rng);
+        
+        new_cluster
+    }
+
     /// Randomizes the centroid
-    pub fn randomize_centroid(&mut self) {
-        let random_centroid: Vec<f64> = (0..self.dimension).map(|_| random()).collect();
+    pub fn randomize_centroid(&mut self, rng: &mut Pcg64) {
+        let random_centroid: Vec<f64> = (0..self.dimension).map(|_| rng.gen()).collect(); 
         self.centroid = Point::from(random_centroid);
     }
 
