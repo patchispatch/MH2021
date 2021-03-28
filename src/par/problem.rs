@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufReader, BufRead};
 use std::fmt::{Display, Formatter, Result};
+use rand::prelude::SliceRandom;
 use rand_pcg::Pcg64;
 use super::Cluster;
 
@@ -98,13 +99,33 @@ impl Problem {
     pub fn greedy(&mut self, rng: &mut Pcg64) -> Vec<Cluster> {
         // Step 1: create k empty clusters with a random centroid
         let dimension = self.data[0].len();
-        self.clusters = (0..dimension).map(|_| Cluster::new_rand(dimension, rng)).collect();
+        self.clusters = (0..self.k).map(|_| Cluster::new_rand(dimension, rng)).collect();
 
         // Step 2: Shuffle element indexes
+        self.data.shuffle(rng);
 
         // Step 3: for every element
-        //  - Calculate infeasibility increment of assigning to each cluster
-        //  - Of the clusters with lesser infeasibility increment, select the nearest
+        for (i, item) in self.data.iter().enumerate() {
+            // Calculate infeasibility increment of assigning to each cluster
+            let mut cl_inf = HashMap::new();
+            let mut min_inf = usize::MAX;
+            for c in 0..self.k {
+                let inf_for_c = self.inf_insert(i, c);
+                cl_inf.insert(c, inf_for_c);
+
+                // If infeasibility increment is below the current minimum, update it
+                if inf_for_c < min_inf {
+                    min_inf = inf_for_c;
+                }
+            } 
+
+            // Of the clusters with lesser infeasibility increment, select the nearest and insert the element
+            let mut candidates: Vec<usize> = cl_inf.iter().filter(|x| *x.1 == min_inf).map(|(index, _)| *index).collect();
+            candidates.sort_by(|a, b| {
+                item.metric_distance(self.clusters[*a].centroid()).partial_cmp(&item.metric_distance(self.clusters[*b].centroid())).unwrap()
+            });                                                                   
+            self.clusters[candidates[0]].insert(i);
+        }
 
         // Step 4: for every cluster
         //  - Calculate new centroid with the assigned elements
@@ -177,7 +198,7 @@ impl Problem {
     fn calc_centroid(&self, clu: &Cluster) -> Point {
         unimplemented!();
     }
-}
+} 
 
 // Display trait
 impl Display for Problem {
