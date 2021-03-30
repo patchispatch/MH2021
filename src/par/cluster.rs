@@ -83,6 +83,13 @@ impl Cluster {
         self.elements.remove(&e)
     }
 
+    /// Returns true if a cluster contains an element
+    /// # Arguments
+    /// - e: usize - Index of an element
+    pub fn contains(&self, e: usize) -> bool {
+        self.elements.contains(&e)
+    }
+
     /// Removes and returns a value from the cluster
     /// # Arguments
     /// - e: usize - Index of an element
@@ -98,6 +105,11 @@ impl Cluster {
     /// Returns a reference to the centroid
     pub fn centroid(&self) -> &Point {
         &self.centroid
+    }
+
+    /// Returns dimension of the cluster
+    pub fn dimension(&self) -> usize {
+        self.dimension
     }
 }
 
