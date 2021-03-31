@@ -67,9 +67,10 @@ impl Problem {
             let c = line.unwrap();
 
             if !c.is_empty() {
-                for (i, val) in c.split(",").skip(ln).map(|x| x.parse::<i8>().unwrap()).enumerate() {
+                for (i, val) in c.split(",").map(|x| x.parse::<i8>().unwrap()).enumerate().skip(ln) {
                     cons.insert((ln, i), val);
 
+                    // Symmetric matrix
                     if ln != i {
                         cons.insert((i, ln), val);
                     }
@@ -96,7 +97,7 @@ impl Problem {
     /// Returns a solution with the greedy COPKM
     /// Returns a vector of clusters
     // TODO: greedy
-    pub fn greedy(&mut self, rng: &mut Pcg64) -> Vec<Cluster> {
+    pub fn greedy(&mut self, rng: &mut Pcg64) -> (Vec<Cluster>, f64) {
         // Step 1: create k empty clusters with a random centroid
         let dimension = self.data[0].len();
         self.clusters = (0..self.k).map(|_| Cluster::new_rand(dimension, rng)).collect();
@@ -134,7 +135,7 @@ impl Problem {
                 
                 // If element is not already on the cluster, insert it and mark that changes has been made
                 if !self.clusters[best].contains(i) {
-                    self.insert_into_cluster(i, best);
+                    Problem::insert_into_cluster(&mut self.clusters, i, best);
                     changes = true;
                 }
             }
@@ -148,7 +149,7 @@ impl Problem {
         }
 
         // Return partition as a Vec<Cluster>
-        self.clusters.clone()
+        (self.clusters.clone(), self.general_deviation())
     }
 
     /// Given a cluster, returns its intra-cluster distance
@@ -172,15 +173,6 @@ impl Problem {
 
         // Return mean
         deviation / self.k as f64
-    }
-
-    /// Inserts element into a cluster, removing it from its previous cluster, if any
-    fn insert_into_cluster(&mut self, element: usize, cluster: usize) {
-        for cl in self.clusters.iter_mut() {
-            cl.take(element);
-        }
-
-        self.clusters[cluster].insert(element);
     }
 
     /// Returns the infeasibility increment of inserting an element into a cluster 
@@ -222,6 +214,15 @@ impl Problem {
     fn calc_centroid(&self, clu: usize) -> Point {
         let cluster = &self.clusters[clu];
         cluster.elements().iter().fold(Point::zeros(cluster.dimension()), |acc, x| acc + &self.data[*x]) / cluster.elements().len() as f64
+    }
+
+    /// Inserts element into a cluster, removing it from its previous cluster, if any
+    fn insert_into_cluster(clusters: &mut Vec<Cluster>, element: usize, new_cluster: usize) {
+        for cl in clusters.iter_mut() {
+            cl.take(element);
+        }
+
+        clusters[new_cluster].insert(element);
     }
 } 
 

@@ -22,7 +22,6 @@ pub type Point = DVector<f64>;
 #[derive(Clone)]
 pub struct Cluster {
     centroid: Point,
-    intra_cluster_dist: f64,
     elements: HashSet<usize>,
     dimension: usize,
 }
@@ -34,7 +33,6 @@ impl Cluster {
     pub fn new(dim: usize) -> Cluster {
         Cluster {
             centroid: Point::zeros(dim),
-            intra_cluster_dist: 0.0,
             elements: HashSet::new(),
             dimension: dim,
         }
@@ -46,7 +44,6 @@ impl Cluster {
     pub fn new_rand(dim: usize, rng: &mut Pcg64) -> Cluster {
         let mut new_cluster = Cluster {
             centroid: Point::zeros(dim),
-            intra_cluster_dist: 0.0,
             elements: HashSet::new(),
             dimension: dim,
         };
@@ -116,6 +113,6 @@ impl Cluster {
 impl fmt::Display for Cluster {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let elements_to_str = self.elements.iter().fold(String::new(), |acc, &x| acc + &x.to_string() + ", "); 
-        write!(f, "Cluster(centroid: {},\nintra-cluster distance: {},\nelements: [{}]", self.centroid, self.intra_cluster_dist, elements_to_str)  
+        write!(f, "Cluster(centroid: {},\nelements: [{}]", self.centroid, elements_to_str)
     }
 }
