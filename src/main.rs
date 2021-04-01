@@ -5,7 +5,7 @@ use rand_pcg::Pcg64;
 
 fn main() {
     // Initialize random seed
-    let seed = 3;
+    let seed = 6;
     let mut rng = Pcg64::seed_from_u64(seed);
 
     // Generate a problem

@@ -11,7 +11,6 @@ use std::collections::HashSet;
 use std::fmt;
 use rand::Rng;
 use na::DVector;
-use std::option::Option;
 use rand_pcg::Pcg64;
 
 // Custom types
@@ -85,13 +84,6 @@ impl Cluster {
     /// - e: usize - Index of an element
     pub fn contains(&self, e: usize) -> bool {
         self.elements.contains(&e)
-    }
-
-    /// Removes and returns a value from the cluster
-    /// # Arguments
-    /// - e: usize - Index of an element
-    pub fn take(&mut self, e: usize) -> Option<usize> {
-        self.elements.take(&e)
     }
 
     /// Returns a reference to the elements set

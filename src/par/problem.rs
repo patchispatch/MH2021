@@ -94,62 +94,16 @@ impl Problem {
         }
     }
 
-    /// Returns a solution with the greedy COPKM
-    /// Returns a vector of clusters
-    // TODO: greedy
-    pub fn greedy(&mut self, rng: &mut Pcg64) -> (Vec<Cluster>, f64) {
-        // Step 1: create k empty clusters with a random centroid
-        let dimension = self.data[0].len();
-        self.clusters = (0..self.k).map(|_| Cluster::new_rand(dimension, rng)).collect();
+    /// Returns an iterator of the data vector
+    pub fn data(&self) -> () {
+        self.data.iter()
+    }
 
-        // Step 2: Shuffle element indexes
-        self.data.shuffle(rng);
-
-        // Step 3: while there are changes in clustering
-        let mut changes = true;
-        while changes {
-            changes = false;
-            
-            // Step 4: for every element
-            for (i, item) in self.data.iter().enumerate() {
-                // Calculate infeasibility increment of assigning to each cluster
-                let mut cl_inf = HashMap::new();
-                let mut min_inf = usize::MAX;
-
-                for c in 0..self.k {
-                    let inf_for_c = self.inf_insert(i, c);
-                    cl_inf.insert(c, inf_for_c);
-
-                    // If infeasibility increment is below the current minimum, update it
-                    if inf_for_c < min_inf {
-                        min_inf = inf_for_c;
-                    }
-                } 
-
-                // Of the clusters with lesser infeasibility increment, select the nearest and insert the element
-                let mut candidates: Vec<usize> = cl_inf.iter().filter(|x| *x.1 == min_inf).map(|(index, _)| *index).collect();
-                candidates.sort_by(|a, b| {
-                    item.metric_distance(self.clusters[*a].centroid()).partial_cmp(&item.metric_distance(self.clusters[*b].centroid())).unwrap()
-                });
-                let best = candidates[0];
-                
-                // If element is not already on the cluster, insert it and mark that changes has been made
-                if !self.clusters[best].contains(i) {
-                    Problem::insert_into_cluster(&mut self.clusters, i, best);
-                    changes = true;
-                }
-            }
-
-            // Step 4: for every cluster
-            for c in 0..self.k {
-                // Calculate new centroid with the assigned elements
-                let centroid = self.calc_centroid(c); 
-                self.clusters[c].set_centroid(centroid);
-            }
-        }
-
-        // Return partition as a Vec<Cluster>
-        (self.clusters.clone(), self.general_deviation())
+    /// Returns a point given an index
+    /// - index: usize - Index of the data vector
+    /// Returns a `Point`
+    pub fn data(&self, index: usize) -> &Point {
+        self.data[index]
     }
 
     /// Given a cluster, returns its intra-cluster distance
@@ -208,7 +162,6 @@ impl Problem {
         inf
     }
 
-
     /// Calculates the new centroid of a cluster
     /// Generates the mean point of the cluster based on the current elements
     fn calc_centroid(&self, clu: usize) -> Point {
@@ -216,10 +169,27 @@ impl Problem {
         cluster.elements().iter().fold(Point::zeros(cluster.dimension()), |acc, x| acc + &self.data[*x]) / cluster.elements().len() as f64
     }
 
+    /// Calculates the infeasibility of the current partition
+    fn calc_infeasiblity(&self) {
+        for constraint in self.constraints.iter() {
+            match constraint.1 {
+                1 => {
+                    println!("Must-link");
+                },
+                -1 => {
+                    println!("Cannot-link");
+                },
+                _ => {}
+            }
+        }
+    }
+
     /// Inserts element into a cluster, removing it from its previous cluster, if any
     fn insert_into_cluster(clusters: &mut Vec<Cluster>, element: usize, new_cluster: usize) {
         for cl in clusters.iter_mut() {
-            cl.take(element);
+            if cl.remove(element) {
+                break;
+            }
         }
 
         clusters[new_cluster].insert(element);
