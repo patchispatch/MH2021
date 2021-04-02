@@ -164,11 +164,9 @@ impl Problem {
         for constraint in self.constraints.iter() {
             match constraint.1 {
                 1 => {
-                    println!("Must-link");
                     inf += 1;
                 },
                 -1 => {
-                    println!("Cannot-link");
                     inf += 1;
                 },
                 _ => {}

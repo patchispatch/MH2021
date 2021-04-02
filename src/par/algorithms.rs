@@ -57,7 +57,6 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
             match partition.get_cluster_index_for(element_index) {
                 Some(current_cluster) if *current_cluster == best => {},
                 _ => {
-                    println!("Element: {}, Cluster: {}", element_index, best);
                     partition.insert(element_index, best);
                     changes = true;
                 }
