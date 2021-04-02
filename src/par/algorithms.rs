@@ -1,4 +1,5 @@
-use par::Problem;
+use super::Problem;
+use super::{Partition, Cluster};
 use rand_pcg::Pcg64;
 
 

@@ -1,13 +1,4 @@
-//! # Cluster
-//! Representation of a cluster on a PAR problem
-//! ## Elements
-//! - centroid: Point - Current centroid
-//! - intra_cluster_distance: f64 - Saved intra-cluster distance
-//! - elements: HashSet<u32> - Set of element indexes (not Points)
-//! - dimension: usize - Dimension of the problem
-
-// use statements
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::fmt;
 use rand::Rng;
 use na::DVector;
@@ -17,7 +8,51 @@ use rand_pcg::Pcg64;
 pub type Point = DVector<f64>;
 
 
-/// Represents a cluster
+/// Struct to represent and manage a partition
+/// - cluster_index: HashMap<usize, usize> Map to check the cluster containing an element
+/// - clusters: Vec<Cluster> Vector of Cluster struct
+pub struct Partition {
+    cluster_index: HashMap<usize, usize>,
+    clusters: Vec<Cluster>,
+}
+
+impl Partition {
+    /// Creates a new empty Partition
+    /// - k: usize - Number of clusters in the partition
+    /// - dim: usize - Dimension of a point in the problem
+    pub fn new(k: usize, dim: usize) -> Partition {
+        let mut clu: Vec<Cluster>;
+        for _ in 0..k { 
+            clu.push(Cluster::new(dim));
+        }
+
+        Partition {
+            cluster_index: HashMap::new(),
+            clusters: clu
+        }
+    }
+
+    /// Insert an element into a cluster
+    /// - element: usize - Index of element to insert
+    /// - cluster: usize - Index of cluster 
+    pub fn insert(&mut self, element: usize, cluster: usize) {
+        // If the element is in another cluster, remove it
+        if self.cluster_index.contains_key(&element) {
+            self.clusters.remove(element);
+        }
+        
+        // Insert in the new cluster and update the index
+        self.clusters[cluster].insert(element);
+        self.cluster_index.insert(element, cluster);
+    }
+}
+
+
+/// Representation of a cluster on a PAR problem
+/// ## Elements
+/// - centroid: Point - Current centroid
+/// - elements: HashSet<usize> - Set of element indexes (not Points)
+/// - dimension: usize - Dimension of the problem Points
 #[derive(Clone)]
 pub struct Cluster {
     centroid: Point,

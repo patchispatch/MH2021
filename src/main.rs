@@ -10,11 +10,4 @@ fn main() {
 
     // Generate a problem
     let mut p = Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7);
-    let (results, dev) = p.greedy(&mut rng);
-
-    println!("Results:");
-    for (i, cluster) in results.iter().enumerate() {
-        println!("Cluster {}: {}", i, cluster);
-    }
-    println!("General deviation: {}", dev);
 }
