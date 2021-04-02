@@ -11,19 +11,20 @@ pub type Point = DVector<f64>;
 /// Struct to represent and manage a partition
 /// - cluster_index: HashMap<usize, usize> Map to check the cluster containing an element
 /// - clusters: Vec<Cluster> Vector of Cluster struct
+#[derive(Clone)]
 pub struct Partition {
     cluster_index: HashMap<usize, usize>,
     clusters: Vec<Cluster>,
 }
 
 impl Partition {
-    /// Creates a new empty Partition
+    /// Creates a new empty Partition with random centroids for each cluster
     /// - k: usize - Number of clusters in the partition
     /// - dim: usize - Dimension of a point in the problem
-    pub fn new(k: usize, dim: usize) -> Partition {
-        let mut clu: Vec<Cluster>;
+    pub fn new(k: usize, dim: usize, rng: &mut Pcg64) -> Partition {
+        let mut clu = Vec::new();
         for _ in 0..k { 
-            clu.push(Cluster::new(dim));
+            clu.push(Cluster::new_rand(dim, rng));
         }
 
         Partition {
@@ -38,12 +39,41 @@ impl Partition {
     pub fn insert(&mut self, element: usize, cluster: usize) {
         // If the element is in another cluster, remove it
         if self.cluster_index.contains_key(&element) {
-            self.clusters.remove(element);
+            self.clusters[cluster].remove(element);
         }
         
         // Insert in the new cluster and update the index
         self.clusters[cluster].insert(element);
         self.cluster_index.insert(element, cluster);
+    }
+
+    /// Get reference to cluster index
+    pub fn cluster_index(&self) -> &HashMap<usize, usize> {
+        &self.cluster_index
+    }
+
+    /// Get reference to clusters vector
+    pub fn clusters(&self) -> &Vec<Cluster> {
+        &self.clusters
+    }
+
+    /// Get a cluster reference from an index
+    /// - i: usize - Cluster index
+    pub fn get_cluster(&self, i: usize) -> &Cluster {
+        &self.clusters[i]
+    }
+
+    /// Get a mutable reference of a cluster from an index
+    /// - i: usize - Cluster index
+    pub fn get_cluster_mut(&mut self, i: usize) -> &mut Cluster {
+        &mut self.clusters[i]
+    }
+
+    /// Get value of cluster index by a key
+    /// - element: usize - Element to check
+    /// Returns *None* if not in the index
+    pub fn get_cluster_index_for(&self, element: usize) -> Option<&usize> {
+        self.cluster_index.get(&element)
     }
 }
 
@@ -81,7 +111,6 @@ impl Cluster {
             elements: HashSet::new(),
             dimension: dim,
         };
-
         new_cluster.randomize_centroid(rng);
         
         new_cluster

@@ -87,10 +87,20 @@ impl Problem {
         &self.data[index]
     }
 
+    /// Returns k
+    pub fn k(&self) -> usize {
+        self.k
+    }
+
+    /// Returns a copy of the data vector
+    pub fn get_data(&self) -> Vec<Point> {
+        self.data.clone()
+    }
+
     /// Given a cluster, returns its intra-cluster distance
     /// # Arguments
     /// - clu: &Cluster - Cluster to calculate
-    fn intra_cluster_distance(&self, cluster: &Cluster) -> f64 {
+    pub fn intra_cluster_distance(&self, cluster: &Cluster) -> f64 {
         // Accumulate distances
         let dist = cluster.elements()
             .iter()
@@ -101,7 +111,7 @@ impl Problem {
     }
 
     /// Returns the general deviation of the current partition
-    fn general_deviation(&self, clusters: &Vec<Cluster>) -> f64 {
+    pub fn general_deviation(&self, clusters: &Vec<Cluster>) -> f64 {
         // Accumulate distances
         let deviation = clusters.iter()
             .fold(0.0, |acc, x| acc + self.intra_cluster_distance(&x));
@@ -114,7 +124,7 @@ impl Problem {
     /// #Arguments
     /// - element: i32 - Index of an element
     /// - clu: &Cluster - Cluster to check
-    fn inf_insert(&self, element: usize, new_cluster: usize, clusters: &Vec<Cluster>) -> usize {
+    pub fn inf_insert(&self, element: usize, new_cluster: usize, clusters: &Vec<Cluster>) -> usize {
         let mut inf = 0;
 
         for (cl_index, cl) in clusters.iter().enumerate() {
@@ -142,35 +152,30 @@ impl Problem {
 
     /// Calculates the new centroid of a cluster
     /// Generates the mean point of the cluster based on the current elements
-    fn calc_centroid(&self, cluster: &Cluster) -> Point {
+    pub fn calc_centroid(&self, cluster: &Cluster) -> Point {
         cluster.elements().iter().fold(Point::zeros(cluster.dimension()), |acc, x| acc + &self.data[*x]) / cluster.elements().len() as f64
     }
 
     /// Calculates the infeasibility of a given partition
     // TODO: calc_infeasibility
-    fn calc_infeasiblity(&self, cluster_index: &HashMap<usize, usize>) {
+    pub fn calc_infeasiblity(&self, cluster_index: &HashMap<usize, usize>) -> usize {
+        let mut inf = 0;
+
         for constraint in self.constraints.iter() {
             match constraint.1 {
                 1 => {
                     println!("Must-link");
+                    inf += 1;
                 },
                 -1 => {
                     println!("Cannot-link");
+                    inf += 1;
                 },
                 _ => {}
             }
         }
-    }
 
-    /// Inserts element into a cluster, removing it from its previous cluster, if any
-    fn insert_into_cluster(clusters: &mut Vec<Cluster>, element: usize, new_cluster: usize) {
-        for cl in clusters.iter_mut() {
-            if cl.remove(element) {
-                break;
-            }
-        }
-
-        clusters[new_cluster].insert(element);
+        inf
     }
 } 
 

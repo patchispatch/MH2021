@@ -1,6 +1,8 @@
 use super::Problem;
 use super::{Partition, Cluster};
+use rand::seq::SliceRandom;
 use rand_pcg::Pcg64;
+use std::collections::HashMap;
 
 
 /// Greedy COPKM
@@ -10,13 +12,14 @@ use rand_pcg::Pcg64;
 /// #### Return value
 /// (Vec<par::Cluster>, usize, f64)
 /// Final partition, infeasibility and general deviation
-pub fn greedy(problem: &mut Problem, rng: &mut Pcg64) -> () {
+pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
     // Step 1: create k empty clusters with a random centroid
     let dimension = problem.data(0).len();
-    self.clusters = (0..self.k).map(|_| Cluster::new_rand(dimension, rng)).collect();
+    let mut partition = Partition::new(problem.k(), dimension, rng);
 
     // Step 2: Shuffle element indexes
-    self.data.shuffle(rng);
+    let mut data = problem.get_data();
+    data.shuffle(rng);
 
     // Step 3: while there are changes in clustering
     let mut changes = true;
@@ -24,47 +27,55 @@ pub fn greedy(problem: &mut Problem, rng: &mut Pcg64) -> () {
         changes = false;
         
         // Step 4: for every element
-        for (i, item) in self.data.iter().enumerate() {
+        for (element_index, element) in data.iter().enumerate() {
             // Calculate infeasibility increment of assigning to each cluster
-            let mut cl_inf = HashMap::new();
-            let mut min_inf = usize::MAX;
+            let mut cluster_infeasibility = HashMap::new();
+            let mut min_infeasibility = usize::MAX;
 
-            for c in 0..self.k {
-                let inf_for_c = self.inf_insert(i, c);
-                cl_inf.insert(c, inf_for_c);
+            for cluster in 0..problem.k() {
+                let infeasibility = problem.inf_insert(element_index, cluster, partition.clusters()); 
+                cluster_infeasibility.insert(cluster, infeasibility);
 
                 // If infeasibility increment is below the current minimum, update it
-                if inf_for_c < min_inf {
-                    min_inf = inf_for_c;
+                if infeasibility < min_infeasibility {
+                    min_infeasibility = infeasibility;
                 }
             } 
 
             // Of the clusters with lesser infeasibility increment, select the nearest and insert the element
-            let mut candidates: Vec<usize> = cl_inf.iter().filter(|x| *x.1 == min_inf).map(|(index, _)| *index).collect();
+            let mut candidates: Vec<usize> = cluster_infeasibility.iter()
+                .filter(|x| *x.1 == min_infeasibility).map(|(index, _)| *index)
+                .collect();
+            
             candidates.sort_by(|a, b| {
-                item.metric_distance(self.clusters[*a].centroid()).partial_cmp(&item.metric_distance(self.clusters[*b].centroid())).unwrap()
+                element.metric_distance(partition.get_cluster(*a).centroid())
+                    .partial_cmp(&element.metric_distance(partition.get_cluster(*b).centroid()))
+                    .unwrap()
             });
             let best = candidates[0];
             
-            // If element is not already on the cluster, insert it and mark that changes has been made
-            if !self.clusters[best].contains(i) {
-                Problem::insert_into_cluster(&mut self.clusters, i, best);
-                changes = true;
+            match partition.get_cluster_index_for(element_index) {
+                Some(current_cluster) if *current_cluster == best => {},
+                _ => {
+                    println!("Element: {}, Cluster: {}", element_index, best);
+                    partition.insert(element_index, best);
+                    changes = true;
+                }
             }
         }
 
         // Step 4: for every cluster
-        for c in 0..self.k {
+        for c in 0..problem.k() {
             // Calculate new centroid with the assigned elements
-            let centroid = self.calc_centroid(c); 
-            self.clusters[c].set_centroid(centroid);
+            let centroid = problem.calc_centroid(partition.get_cluster(c)); 
+            partition.get_cluster_mut(c).set_centroid(centroid);
         }
     }
 
     // Calculate infeasibility of the partition
-    self.calc_infeasiblity();
+    let partition_inf = problem.calc_infeasiblity(partition.cluster_index());
 
 
     // Return partition as a Vec<Cluster>
-    (self.clusters.clone(), self.general_deviation())
+    (partition.clone(), partition_inf, problem.general_deviation(partition.clusters())) 
 }

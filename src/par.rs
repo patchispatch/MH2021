@@ -1,7 +1,7 @@
 // Declare sub-modules
 mod problem;
 mod partition;
-mod algorithms;
+pub mod algorithms;
 
 // Use par::<element> instead of calling par::<submodule>::<element>
 pub use problem::Problem;
