@@ -1,12 +1,11 @@
 use super::Problem;
-use super::{Partition, Cluster};
+use super::Partition;
 use rand::seq::SliceRandom;
 use rand_pcg::Pcg64;
 use std::collections::HashMap;
 
 
 /// Greedy COPKM
-/// #### Arguments
 /// - problem: &mut par::Problem - Instance of a problem
 /// - rng: &mut rand_pcg::Pcg64 - Random number generator
 /// #### Return value
@@ -77,4 +76,9 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
 
     // Return partition as a Vec<Cluster>
     (partition.clone(), partition_inf, problem.general_deviation(partition.clusters())) 
+}
+
+/// Local search
+pub fn local_search() {
+    unimplemented!();
 }

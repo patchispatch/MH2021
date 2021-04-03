@@ -1,4 +1,4 @@
-use na::{DVector, MatrixMN, Dynamic};
+use na::DVector;
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::fs::*;
@@ -8,18 +8,13 @@ use super::Cluster;
 
 // Custom types
 pub type Point = DVector<f64>;
-pub type Column = DVector<i8>;
-pub type Matrix<T> = MatrixMN<T, Dynamic, Dynamic>;
-
-// TODO: Timer
-
-// TODO: csv
-
 
 pub struct Problem {
     data: Vec<Point>,
     constraints: HashMap<(usize, usize), i8>,
+    distances: HashMap<(usize, usize), f64>,
     k: usize,
+    lambda: f64,
 }
 
 impl Problem {
@@ -57,6 +52,9 @@ impl Problem {
         // The constraints file represents the constraint matrix
         println!("Reading file {}", constraints_file);
 
+        // TODO: optimize constraint map
+        // Only store constraints, when reading, use unwrap_or_else() or if let Some(c)
+
         for (ln, line) in reader.lines().enumerate() {
             let c = line.unwrap();
 
@@ -72,11 +70,30 @@ impl Problem {
             }
         }
 
+        // Calculate and store distance between points
+        let mut dist = HashMap::new();
+        for (i, e1) in points.iter().enumerate() {
+            for (j, e2) in points.iter().enumerate() {
+                dist.insert((i, j), e1.metric_distance(e2));
+
+                if i != j {
+                    dist.insert((j, i), *dist.get(&(i, j)).unwrap());
+                }
+            }
+        }
+
+        // Calculate lambda as (max_distance + n) / |constraints|
+        // FIXME: constraints.len() currently includes pairs with no constraints
+        let lmbd = dist.values().cloned().fold(0./0., f64::max) / constraints.len();
+        println!("Lambda: {}", lmbd);
+
         // Returns a Problem
         Problem {
             data: points,
             constraints: cons,
+            distances: dist,
             k: cl_number,
+            lambda: lmbd,
         }
     }
 
@@ -157,22 +174,23 @@ impl Problem {
     }
 
     /// Calculates the infeasibility of a given partition
-    // TODO: calc_infeasibility
     pub fn calc_infeasiblity(&self, cluster_index: &HashMap<usize, usize>) -> usize {
         let mut inf = 0;
 
         for constraint in self.constraints.iter() {
+            let (e1, e2) = constraint.0; 
             match constraint.1 {
-                1 => {
+                1 if cluster_index.get(e1).unwrap() != cluster_index.get(e2).unwrap() => {
                     inf += 1;
                 },
-                -1 => {
+                -1 if cluster_index.get(e1).unwrap() == cluster_index.get(e2).unwrap() => {
                     inf += 1;
                 },
                 _ => {}
             }
         }
 
+        println!("Infeasibility: {}", inf);
         inf
     }
 } 
