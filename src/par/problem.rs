@@ -9,10 +9,10 @@ use super::Cluster;
 // Custom types
 pub type Point = DVector<f64>;
 
+
 pub struct Problem {
     data: Vec<Point>,
     constraints: HashMap<(usize, usize), i8>,
-    distances: HashMap<(usize, usize), f64>,
     k: usize,
     lambda: f64,
 }
@@ -52,8 +52,7 @@ impl Problem {
         // The constraints file represents the constraint matrix
         println!("Reading file {}", constraints_file);
 
-        // TODO: optimize constraint map
-        // Only store constraints, when reading, use unwrap_or_else() or if let Some(c)
+        let mut constraint_number = 0;
 
         for (ln, line) in reader.lines().enumerate() {
             let c = line.unwrap();
@@ -61,6 +60,7 @@ impl Problem {
             if !c.is_empty() {
                 for (i, val) in c.split(",").map(|x| x.parse::<i8>().unwrap()).enumerate().skip(ln) {
                     cons.insert((ln, i), val);
+                    constraint_number += 1;
 
                     // Symmetric matrix
                     if ln != i {
@@ -83,15 +83,12 @@ impl Problem {
         }
 
         // Calculate lambda as (max_distance + n) / |constraints|
-        // FIXME: constraints.len() currently includes pairs with no constraints
-        let lmbd = dist.values().cloned().fold(0./0., f64::max) / constraints.len();
-        println!("Lambda: {}", lmbd);
+        let lmbd = dist.values().cloned().fold(0./0., f64::max) / constraint_number as f64;
 
         // Returns a Problem
         Problem {
             data: points,
             constraints: cons,
-            distances: dist,
             k: cl_number,
             lambda: lmbd,
         }
@@ -141,25 +138,14 @@ impl Problem {
     /// #Arguments
     /// - element: i32 - Index of an element
     /// - clu: &Cluster - Cluster to check
-    pub fn inf_insert(&self, element: usize, new_cluster: usize, clusters: &Vec<Cluster>) -> usize {
+    pub fn inf_insert(&self, element: usize, new_cluster: usize, cluster_index: &HashMap<usize, usize>) -> usize {
         let mut inf = 0;
 
-        for (cl_index, cl) in clusters.iter().enumerate() {
-            // Cannot link
-            if cl_index == new_cluster {
-                for &i in cl.elements() {
-                    if self.constraints[&(i, element)] == -1 { 
-                        inf += 1;
-                    }
-                }
-            }
-            // Must link
-            else {
-                for &i in cl.elements() {
-                    if self.constraints[&(i, element)] == 1 {
-                        inf += 1;
-                    }
-                }
+        for ((first, second), con_value) in self.constraints.iter().filter(|((f, _), _)| *f == element) {
+            let cannot_link = *con_value == -1 && cluster_index.get(&second) == Some(&new_cluster);
+            let must_link = *con_value == 1 && cluster_index.get(&second) != Some(&new_cluster);
+            if cannot_link || must_link {
+                inf += 1;
             }
         }
         
@@ -190,10 +176,9 @@ impl Problem {
             }
         }
 
-        println!("Infeasibility: {}", inf);
         inf
     }
-} 
+}
 
 // Display trait
 impl Display for Problem {

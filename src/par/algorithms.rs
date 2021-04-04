@@ -32,7 +32,7 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
             let mut min_infeasibility = usize::MAX;
 
             for cluster in 0..problem.k() {
-                let infeasibility = problem.inf_insert(element_index, cluster, partition.clusters()); 
+                let infeasibility = problem.inf_insert(element_index, cluster, partition.cluster_index()); 
                 cluster_infeasibility.insert(cluster, infeasibility);
 
                 // If infeasibility increment is below the current minimum, update it
@@ -79,6 +79,7 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
 }
 
 /// Local search
+// TODO: local search
 pub fn local_search() {
     unimplemented!();
 }
