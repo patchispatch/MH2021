@@ -1,9 +1,10 @@
 mod par;
 use par::Problem;
-use par::algorithms::greedy;
+use par::algorithms::local_search;
 use rand::SeedableRng;
 use rand_pcg::Pcg64;
 use std::time::Instant;
+
 
 fn main() {
     // Initialize random seed
@@ -17,7 +18,7 @@ fn main() {
 
     // Greedy
     let now = Instant::now();
-    let (partition, inf, dev) = greedy(&p, &mut rng);
+    let (partition, inf, dev) = local_search(&p, &mut rng);
     println!("Inf: {}, Dev: {}", inf, dev);
-    println!("Greedy: {} milliseconds", now.elapsed().as_millis());
+    println!("LS: {} milliseconds", now.elapsed().as_millis());
 }

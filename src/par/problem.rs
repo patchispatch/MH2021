@@ -111,6 +111,11 @@ impl Problem {
         self.data.clone()
     }
 
+    /// Returns value of lambda
+    pub fn lambda(&self) -> f64 {
+        self.lambda
+    }
+ 
     /// Given a cluster, returns its intra-cluster distance
     /// # Arguments
     /// - clu: &Cluster - Cluster to calculate
@@ -141,7 +146,7 @@ impl Problem {
     pub fn inf_insert(&self, element: usize, new_cluster: usize, cluster_index: &HashMap<usize, usize>) -> usize {
         let mut inf = 0;
 
-        for ((first, second), con_value) in self.constraints.iter().filter(|((f, _), _)| *f == element) {
+        for ((_, second), con_value) in self.constraints.iter().filter(|((first, _), _)| *first == element) {
             let cannot_link = *con_value == -1 && cluster_index.get(&second) == Some(&new_cluster);
             let must_link = *con_value == 1 && cluster_index.get(&second) != Some(&new_cluster);
             if cannot_link || must_link {

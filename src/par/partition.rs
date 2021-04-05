@@ -17,6 +17,7 @@ pub struct Partition {
     clusters: Vec<Cluster>,
 }
 
+
 impl Partition {
     /// Creates a new empty Partition with random centroids for each cluster
     /// - k: usize - Number of clusters in the partition
@@ -45,6 +46,23 @@ impl Partition {
         // Insert in the new cluster and update the index
         self.clusters[cluster].insert(element);
         self.cluster_index.insert(element, cluster);
+    }
+
+    /// Generate a neighbour by changing `element` to `cluster`
+    /// #### Return value:
+    /// - `Some(neighbour)` where neighbour is valid
+    /// - `None` if the neighbour is not valid
+    pub fn gen_neighbour(&self, element: usize, cluster: usize) -> Option<Partition> {
+        let mut neighbour = self.clone();
+        neighbour.insert(element, cluster);
+        
+        // Check if valid
+        if neighbour.get_cluster(cluster).is_empty() {
+            None
+        }
+        else {
+            Some(neighbour)
+        }
     }
 
     /// Get reference to cluster index
@@ -163,6 +181,11 @@ impl Cluster {
     /// Returns dimension of the cluster
     pub fn dimension(&self) -> usize {
         self.dimension
+    }
+
+    /// Returns `true` if cluster is empty
+    pub fn is_empty(&self) -> bool {
+        self.elements.is_empty()
     }
 }
 
