@@ -1,4 +1,5 @@
-use std::collections::{HashSet, HashMap};
+use super::Problem;
+use std::collections::{HashSet, HashMap, BTreeMap};
 use std::fmt;
 use rand::Rng;
 use na::DVector;
@@ -13,7 +14,7 @@ pub type Point = DVector<f64>;
 /// - clusters: Vec<Cluster> Vector of Cluster struct
 #[derive(Clone)]
 pub struct Partition {
-    cluster_index: HashMap<usize, usize>,
+    cluster_index: BTreeMap<usize, usize>,
     clusters: Vec<Cluster>,
 }
 
@@ -29,7 +30,7 @@ impl Partition {
         }
 
         Partition {
-            cluster_index: HashMap::new(),
+            cluster_index: BTreeMap::new(),
             clusters: clu
         }
     }
@@ -37,14 +38,15 @@ impl Partition {
     /// Insert an element into a cluster
     /// - element: usize - Index of element to insert
     /// - cluster: usize - Index of cluster 
-    pub fn insert(&mut self, element: usize, cluster: usize) {
+    /// - problem: &Problem - Instance of the problem (needed to calculate new cluster centroid)
+    pub fn insert(&mut self, element: usize, cluster: usize, problem: &Problem) {
         // If the element is in another cluster, remove it
         if self.cluster_index.contains_key(&element) {
             self.clusters[cluster].remove(element);
         }
         
         // Insert in the new cluster and update the index
-        self.clusters[cluster].insert(element);
+        self.clusters[cluster].insert(element, problem);
         self.cluster_index.insert(element, cluster);
     }
 
@@ -52,9 +54,9 @@ impl Partition {
     /// #### Return value:
     /// - `Some(neighbour)` where neighbour is valid
     /// - `None` if the neighbour is not valid
-    pub fn gen_neighbour(&self, element: usize, cluster: usize) -> Option<Partition> {
+    pub fn gen_neighbour(&self, element: usize, cluster: usize, problem: &Problem) -> Option<Partition> {
         let mut neighbour = self.clone();
-        neighbour.insert(element, cluster);
+        neighbour.insert(element, cluster, problem);
         
         // Check if valid
         if neighbour.get_cluster(cluster).is_empty() {
@@ -66,7 +68,7 @@ impl Partition {
     }
 
     /// Get reference to cluster index
-    pub fn cluster_index(&self) -> &HashMap<usize, usize> {
+    pub fn cluster_index(&self) -> &BTreeMap<usize, usize> {
         &self.cluster_index
     }
 
@@ -150,8 +152,14 @@ impl Cluster {
     /// Inserts a new element into the cluster
     /// # Arguments
     /// - e: usize - Index of an element
-    pub fn insert(&mut self, e: usize) -> bool {
-        self.elements.insert(e)
+    pub fn insert(&mut self, e: usize, problem: &Problem) -> bool {
+        let success = self.elements.insert(e);
+
+        if success {
+            self.centroid = problem.calc_centroid(self);
+        }
+
+        success
     }
 
     /// Removes an element from the cluster

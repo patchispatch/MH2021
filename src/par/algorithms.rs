@@ -31,7 +31,7 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
             let mut min_infeasibility = usize::MAX;
 
             for cluster in 0..problem.k() {
-                let infeasibility = problem.inf_insert(element_index, cluster, partition.cluster_index()); 
+                let infeasibility = problem.inf_insert(element_index, cluster, partition.cluster_index());
                 cluster_infeasibility.insert(cluster, infeasibility);
 
                 // If infeasibility increment is below the current minimum, update it
@@ -55,7 +55,7 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f64) {
             match partition.get_cluster_index_for(element_index) {
                 Some(current_cluster) if *current_cluster == best => {},
                 _ => {
-                    partition.insert(element_index, best);
+                    partition.insert(element_index, best, problem);
                     changes = true;
                 }
             }
@@ -122,7 +122,7 @@ pub fn local_search(problem: &Problem, rng: &mut Pcg64) -> (Partition, usize, f6
 
         for (element, new_cluster) in neighbourhood {
             // Generate neighbour, and if valid, calculate fitness and compare with current partition
-            let neighbour = current.gen_neighbour(element, new_cluster);
+            let neighbour = current.gen_neighbour(element, new_cluster, problem);
 
             if let Some(valid) = neighbour {
                 let valid_fitness = fitness(&valid);

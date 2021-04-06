@@ -1,6 +1,6 @@
 use na::DVector;
 use std::vec::Vec;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::fs::*;
 use std::io::{BufReader, BufRead};
 use std::fmt::{Display, Formatter, Result};
@@ -143,7 +143,7 @@ impl Problem {
     /// #Arguments
     /// - element: i32 - Index of an element
     /// - clu: &Cluster - Cluster to check
-    pub fn inf_insert(&self, element: usize, new_cluster: usize, cluster_index: &HashMap<usize, usize>) -> usize {
+    pub fn inf_insert(&self, element: usize, new_cluster: usize, cluster_index: &BTreeMap<usize, usize>) -> usize {
         let mut inf = 0;
 
         for ((_, second), con_value) in self.constraints.iter().filter(|((first, _), _)| *first == element) {
@@ -165,19 +165,21 @@ impl Problem {
     }
 
     /// Calculates the infeasibility of a given partition
-    pub fn calc_infeasiblity(&self, cluster_index: &HashMap<usize, usize>) -> usize {
+    pub fn calc_infeasiblity(&self, cluster_index: &BTreeMap<usize, usize>) -> usize {
         let mut inf = 0;
 
         for constraint in self.constraints.iter() {
-            let (e1, e2) = constraint.0; 
-            match constraint.1 {
-                1 if cluster_index.get(e1).unwrap() != cluster_index.get(e2).unwrap() => {
-                    inf += 1;
-                },
-                -1 if cluster_index.get(e1).unwrap() == cluster_index.get(e2).unwrap() => {
-                    inf += 1;
-                },
-                _ => {}
+            let (e1, e2) = constraint.0;
+            if e1 > e2 {
+                match constraint.1 {
+                    1 if cluster_index.get(e1).unwrap() != cluster_index.get(e2).unwrap() => {
+                        inf += 1;
+                    },
+                    -1 if cluster_index.get(e1).unwrap() == cluster_index.get(e2).unwrap() => {
+                        inf += 1;
+                    },
+                    _ => {}
+                }
             }
         }
 

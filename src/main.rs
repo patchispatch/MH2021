@@ -12,8 +12,8 @@ fn main() {
     let mut rng = Pcg64::seed_from_u64(seed);
 
     // Generate a problem
-    // let p = Problem::from_files("instances/bupa_set.dat", "instances/bupa_set_const_20.const", 16);
-    let p = Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_20.const", 7);
+    let p = Problem::from_files("instances/bupa_set.dat", "instances/bupa_set_const_20.const", 16);
+    // let p = Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_20.const", 7);
     // let p = Problem::from_files("instances/glass_set.dat", "instances/glass_set_const_20.const", 7);
 
     // Greedy
