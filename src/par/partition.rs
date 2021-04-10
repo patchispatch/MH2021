@@ -1,5 +1,5 @@
 use super::Problem;
-use std::collections::{HashSet, HashMap, BTreeMap};
+use std::collections::{HashSet, BTreeMap};
 use std::fmt;
 use rand::Rng;
 use na::DVector;
@@ -49,6 +49,22 @@ impl Partition {
         self.clusters[cluster].insert(element, problem);
         self.cluster_index.insert(element, cluster);
     }
+
+    /// Insert an element into a cluster and update its centroid
+    /// - element: usize - Index of element to insert
+    /// - cluster: usize - Index of cluster 
+    /// - problem: &Problem - Instance of the problem (needed to calculate new cluster centroid)
+    pub fn insert_and_update(&mut self, element: usize, cluster: usize, problem: &Problem) {
+        // If the element is in another cluster, remove it
+        if self.cluster_index.contains_key(&element) {
+            self.clusters[cluster].remove(element);
+        }
+        
+        // Insert in the new cluster and update the index
+        self.clusters[cluster].insert_and_update(element, problem);
+        self.cluster_index.insert(element, cluster);
+    }
+    
 
     /// Generate a neighbour by changing `element` to `cluster`
     /// #### Return value:
@@ -153,6 +169,13 @@ impl Cluster {
     /// # Arguments
     /// - e: usize - Index of an element
     pub fn insert(&mut self, e: usize, problem: &Problem) -> bool {
+        self.elements.insert(e)
+    }
+
+    /// Inserts a new element into the cluster and updates the centroid
+    /// # Arguments
+    /// - e: usize - Index of an element
+    pub fn insert_and_update(&mut self, e: usize, problem: &Problem) -> bool {
         let success = self.elements.insert(e);
 
         if success {

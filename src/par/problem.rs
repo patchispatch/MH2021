@@ -4,7 +4,8 @@ use std::collections::{HashMap, BTreeMap};
 use std::fs::*;
 use std::io::{BufReader, BufRead};
 use std::fmt::{Display, Formatter, Result};
-use super::Cluster;
+use colored::*;
+use super::{Partition, Cluster};
 
 // Custom types
 pub type Point = DVector<f64>;
@@ -32,7 +33,7 @@ impl Problem {
         let reader = BufReader::new(data);
 
         // Each line in the data file represents a Point in the problem space
-        println!("Reading file {}", data_file);
+        print!("Reading data from {}: ", data_file);
         for line in reader.lines() {
             let p = line.unwrap();
             
@@ -43,14 +44,14 @@ impl Problem {
         }
 
         // Read data OK
-        println!("Reading file {}: OK", data_file);
+        print!("{}\n", "OK".green().bold());
 
         // Open constraints file
         let constraints = File::open(constraints_file).expect("Constraints file not found");
         let reader = BufReader::new(constraints);
 
         // The constraints file represents the constraint matrix
-        println!("Reading file {}", constraints_file);
+        print!("Reading constraints from {}: ", constraints_file);
 
         let mut constraint_number = 0;
 
@@ -69,6 +70,9 @@ impl Problem {
                 }
             }
         }
+
+        // Read constraints OK
+        print!("{}\n", "OK".green().bold());
 
         // Calculate and store distance between points
         let mut dist = HashMap::new();
@@ -184,6 +188,13 @@ impl Problem {
         }
 
         inf
+    }
+
+    /// Returns the fitness of a given partition
+    /// - partition: &Partition - Partition to evaluate
+    pub fn fitness(&self, partition: &Partition) -> f64 {
+        self.general_deviation(partition.clusters()) + 
+            self.calc_infeasiblity(partition.cluster_index()) as f64 * self.lambda()
     }
 }
 

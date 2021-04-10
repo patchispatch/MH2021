@@ -10,3 +10,7 @@ edition = "2018"
 na = { package = "nalgebra", version = "*" }
 rand = "*"
 rand_pcg = "*"
+csv = "*"
+serde = "*"
+serde_derive = "*"
+colored = "2"
