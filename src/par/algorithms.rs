@@ -38,7 +38,7 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, f64, usize, f64
                 if infeasibility < min_infeasibility {
                     min_infeasibility = infeasibility;
                 }
-            } 
+            }
 
             // Of the clusters with lesser infeasibility increment, select the nearest and insert the element
             let mut candidates: Vec<usize> = cluster_infeasibility.iter()
