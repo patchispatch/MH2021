@@ -14,8 +14,8 @@ pub use partition::Partition;
 // Struct for serialization
 #[derive(Serialize)]
 #[serde(rename_all = "PascalCase")]
-pub struct ExecutionRecord<'a> {
-    pub instance: &'a str,
+pub struct ExecutionRecord {
+    pub instance: usize,
     pub aggregate: f64,
     pub infeasibility: usize,
     pub general_deviation: f64,
