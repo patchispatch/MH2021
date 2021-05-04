@@ -5,4 +5,4 @@ Repositorio de las prácticas de Metaheurísticas del Grado en Ingeniería Infor
 Las prácticas se realizan sobre el Problema de Agrupamiento con Restricciones (PAR). 
 
 ### Práctica 1: *greedy* y búsqueda local
-Por completar.
+Calificación: 2/3
