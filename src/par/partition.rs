@@ -105,6 +105,11 @@ impl Partition {
         }
     }
 
+    /// Return number of clusters
+    pub fn k(&self) -> usize {
+        self.clusters.len()
+    }
+
     /// Get reference to cluster index
     pub fn cluster_index(&self) -> &BTreeMap<usize, usize> {
         &self.cluster_index
