@@ -35,18 +35,41 @@ impl Partition {
         }
     }
 
+    /// Creates a new random valid Partition given an instance of Problem
+    /// - problem: &Problem - Instance of a problem
+    /// - rng: &mut rand_pcg::Pcg64 - Random number generator
+    pub fn new_rand(problem: &Problem, rng: &mut Pcg64) -> Partition {
+        let dim = problem.data(0).len();
+
+        let mut partition = Partition {
+            cluster_index: BTreeMap::new(),
+            clusters: vec![Cluster::new(dim); problem.k()]
+        };
+
+        for (index, _) in problem.get_data().iter().enumerate() {
+            let random_cluster = rng.gen_range(0..problem.k());
+            partition.insert(index, random_cluster);
+        }
+
+        // Check if valid. If not, launch recursively
+        if partition.clusters.iter().filter(|x| x.len() == 0).next().is_some() {
+            partition = Partition::new_rand(problem, rng);
+        }
+
+        partition
+    }
+
     /// Insert an element into a cluster
     /// - element: usize - Index of element to insert
     /// - cluster: usize - Index of cluster 
-    /// - problem: &Problem - Instance of the problem (needed to calculate new cluster centroid)
-    pub fn insert(&mut self, element: usize, cluster: usize, problem: &Problem) {
+    pub fn insert(&mut self, element: usize, cluster: usize) {
         // If the element is in another cluster, remove it
         if self.cluster_index.contains_key(&element) {
             self.clusters[cluster].remove(element);
         }
         
         // Insert in the new cluster and update the index
-        self.clusters[cluster].insert(element, problem);
+        self.clusters[cluster].insert(element);
         self.cluster_index.insert(element, cluster);
     }
 
@@ -64,7 +87,6 @@ impl Partition {
         self.clusters[cluster].insert_and_update(element, problem);
         self.cluster_index.insert(element, cluster);
     }
-    
 
     /// Generate a neighbour by changing `element` to `cluster`
     /// #### Return value:
@@ -72,7 +94,7 @@ impl Partition {
     /// - `None` if the neighbour is not valid
     pub fn gen_neighbour(&self, element: usize, cluster: usize, problem: &Problem) -> Option<Partition> {
         let mut neighbour = self.clone();
-        neighbour.insert(element, cluster, problem);
+        neighbour.insert_and_update(element, cluster, problem);
         
         // Check if valid
         if neighbour.get_cluster(cluster).is_empty() {
@@ -168,7 +190,7 @@ impl Cluster {
     /// Inserts a new element into the cluster
     /// # Arguments
     /// - e: usize - Index of an element
-    pub fn insert(&mut self, e: usize, problem: &Problem) -> bool {
+    pub fn insert(&mut self, e: usize) -> bool {
         self.elements.insert(e)
     }
 
@@ -217,6 +239,11 @@ impl Cluster {
     /// Returns `true` if cluster is empty
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
+    }
+
+    /// Returns the number of elements in the cluster
+    pub fn len(&self) -> usize {
+        self.elements.len()
     }
 }
 

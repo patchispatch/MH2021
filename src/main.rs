@@ -25,7 +25,8 @@ fn main() {
         seeds = vec![4, 7, 2, 1, 3];
 
         // Zoo
-        instances.insert("zoo10", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7)); 
+        instances.insert("zoo10", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7));
+        /*
         instances.insert("zoo20", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_20.const", 7));
 
         // Bupa
@@ -35,6 +36,7 @@ fn main() {
         // Glass
         instances.insert("glass10", Problem::from_files("instances/glass_set.dat", "instances/glass_set_const_10.const", 7));
         instances.insert("glass20", Problem::from_files("instances/glass_set.dat", "instances/glass_set_const_20.const", 7));
+        */
     }
     else if args.len() == 6 {
         let data_file = &args[1];

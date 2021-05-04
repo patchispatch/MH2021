@@ -55,7 +55,7 @@ pub fn greedy(problem: &Problem, rng: &mut Pcg64) -> (Partition, f64, usize, f64
             match partition.get_cluster_index_for(element_index) {
                 Some(current_cluster) if *current_cluster == best => {},
                 _ => {
-                    partition.insert(element_index, best, problem);
+                    partition.insert(element_index, best);
                     changes = true;
                 }
             }
@@ -102,8 +102,11 @@ pub fn local_search(problem: &Problem, rng: &mut Pcg64) -> (Partition, f64, usiz
     let gen_neighbourhood = |partition: &Partition| -> Vec<(usize, usize)> {
         let mut neighbourhood: Vec<(usize, usize)> = Vec::new();
         for (element, current_cluster) in partition.cluster_index() {
-            for cluster in (0..problem.k()).filter(|x| x != current_cluster) { 
-                neighbourhood.push((*element, cluster));
+            for cluster in (0..problem.k()).filter(|x| x != current_cluster) {
+                // If length is 1, current_cluster will be empty in the neighbour
+                if partition.get_cluster(*current_cluster).len() != 1 {
+                    neighbourhood.push((*element, cluster));
+                }
             }
         }
 
@@ -113,7 +116,7 @@ pub fn local_search(problem: &Problem, rng: &mut Pcg64) -> (Partition, f64, usiz
     // Algorithm
 
     // Start with a greedy
-    let (first_partition, _, _, _) = greedy(problem, rng);
+    let first_partition = Partition::new_rand(problem, rng);
     let mut current_fitness = problem.fitness(&first_partition);
     
     // Some(Partition) if a best neighbour is found, None if not
