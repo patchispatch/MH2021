@@ -13,7 +13,6 @@ use rand_pcg::Pcg64;
 /// 
 /// #### Return value
 /// - Vec<(usize, usize)>
-///     // Neighbourhood operator
 fn gen_neighbourhood(partition: &Partition) -> Vec<(usize, usize)> {
     let mut neighbourhood: Vec<(usize, usize)> = Vec::new();
     for (element, current_cluster) in partition.cluster_index() {
@@ -28,17 +27,12 @@ fn gen_neighbourhood(partition: &Partition) -> Vec<(usize, usize)> {
     neighbourhood
 }
 
-
 /// Local search algorithm
 /// - problem: &Problem - Instance of a problem
 /// - rng: &Pcg64 - Random number generator
 /// #### Return value
-/// I don't know
+/// (final_partition: Partition, current_fitness: f64, inf: usize, deviation: f64)
 pub fn local_search(problem: &Problem, rng: &mut Pcg64) -> (Partition, f64, usize, f64) {
-
-
-    // Algorithm
-
     // Start with a greedy
     let first_partition = Partition::new_rand(problem, rng);
     let mut current_fitness = problem.fitness(&first_partition);

@@ -1,6 +1,7 @@
 // Submodule declaration
 mod greedy;
 mod local_search;
+mod genetic;
 
 // Export algorithms
 pub use greedy::greedy;

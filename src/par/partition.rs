@@ -59,6 +59,15 @@ impl Partition {
         partition
     }
 
+    /// Creates a population of new random partitions with *n* elements
+    /// - problem: &Problem - Instance of a problem
+    /// - n: u32 - number of elements of the partition
+    /// - rng: &mut rand_pcg::Pcg64 - Random number generator
+    pub fn random_partition(problem: &Problem, n: u32, rng: &mut Pcg64) -> Vec<Partition> {
+        // TODO: implement
+        unimplemented!();
+    }
+
     /// Insert an element into a cluster
     /// - element: usize - Index of element to insert
     /// - cluster: usize - Index of cluster 
@@ -103,6 +112,21 @@ impl Partition {
         else {
             Some(neighbour)
         }
+    }
+
+    /// Checks if a partition is valid
+    /// A partition is considered valid when there is no empty clusters inside it
+    pub fn is_valid(&self) -> bool {
+        // TODO: implement
+        unimplemented!();
+    }
+
+    /// Randomly repairs an invalid partition, moving an element to its empty clusters
+    /// #### Arguments
+    /// - rng: &mut Pcg64 - Random number generator
+    pub fn repair(&mut self, rng: &mut Pcg64) {
+        // TODO: implement
+        unimplemented!();
     }
 
     /// Return number of clusters
