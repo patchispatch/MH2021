@@ -1,7 +1,7 @@
 mod par;
 use par::Problem;
 use par::ExecutionRecord;
-use par::algorithms::{greedy, local_search};
+use par::algorithms::{greedy, local_search, generational_genetic};
 
 use rand::SeedableRng;
 use rand_pcg::Pcg64;
@@ -26,7 +26,6 @@ fn main() {
 
         // Zoo
         instances.insert("zoo10", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7));
-        /*
         instances.insert("zoo20", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_20.const", 7));
 
         // Bupa
@@ -36,7 +35,6 @@ fn main() {
         // Glass
         instances.insert("glass10", Problem::from_files("instances/glass_set.dat", "instances/glass_set_const_10.const", 7));
         instances.insert("glass20", Problem::from_files("instances/glass_set.dat", "instances/glass_set_const_20.const", 7));
-        */
     }
     else if args.len() == 6 {
         let data_file = &args[1];
@@ -47,9 +45,19 @@ fn main() {
 
         instances.insert(results_file, Problem::from_files(data_file, constraints_file, number_of_clusters));
     }
+    // Test purposes
+    else {
+        instances.insert("zoo10", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7));
+
+        for (key, instance) in instances.iter() {
+            let seed = 4;
+            let mut rng = Pcg64::seed_from_u64(seed);
+            generational_genetic(&instance, 50, &mut rng);
+        }
+    }
 
     
-
+    /*
     // Execute greedy for every instance five times, saving each one in its respective csv file
     for (key, instance) in instances.iter() {
         println!("Executing greedy for instance {}", key);
@@ -97,4 +105,5 @@ fn main() {
         }
         wtr.flush().unwrap();
     }
+    */
 }

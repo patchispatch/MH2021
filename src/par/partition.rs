@@ -63,9 +63,14 @@ impl Partition {
     /// - problem: &Problem - Instance of a problem
     /// - n: u32 - number of elements of the partition
     /// - rng: &mut rand_pcg::Pcg64 - Random number generator
-    pub fn random_partition(problem: &Problem, n: u32, rng: &mut Pcg64) -> Vec<Partition> {
-        // TODO: implement
-        unimplemented!();
+    pub fn random_population(problem: &Problem, n: u32, rng: &mut Pcg64) -> Vec<Partition> {
+        let mut population = Vec::new();
+
+        for _ in 0..n {
+            population.push(Partition::new_rand(problem, rng));
+        }
+
+        population
     }
 
     /// Insert an element into a cluster
