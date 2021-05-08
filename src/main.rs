@@ -49,7 +49,7 @@ fn main() {
     else {
         instances.insert("zoo10", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7));
 
-        for (key, instance) in instances.iter() {
+        for (_, instance) in instances.iter() {
             let seed = 4;
             let mut rng = Pcg64::seed_from_u64(seed);
             generational_genetic(&instance, 50, &mut rng);
