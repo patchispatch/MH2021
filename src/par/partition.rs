@@ -73,6 +73,11 @@ impl Partition {
         population
     }
 
+    /// Returns total number of elements (size of the problem)
+    pub fn problem_size(&self) -> usize {
+        self.cluster_index.len()
+    }
+
     /// Insert an element into a cluster
     /// - element: usize - Index of element to insert
     /// - cluster: usize - Index of cluster 

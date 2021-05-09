@@ -110,6 +110,11 @@ impl Problem {
         self.k
     }
 
+    /// Returns number of elements
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
     /// Returns a copy of the data vector
     pub fn get_data(&self) -> Vec<Point> {
         self.data.clone()

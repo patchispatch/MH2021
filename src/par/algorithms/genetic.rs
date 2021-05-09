@@ -1,19 +1,26 @@
 use super::super::Problem; 
 use super::super::Partition;
 use rand::Rng;
+use rand::seq::SliceRandom;
 use rand_pcg::Pcg64;
+use std::collections::HashSet;
 
 
 /// Returns a new partition based on two existing ones using 
 /// the **Uniform crossover operator**
 fn uniform_crossover(p1: &Partition, p2: &Partition, rng: &mut Pcg64) -> Partition {
-    let k = p1.k();
+    let total_elements = p1.problem_size();
+
+    // Since genes to cross are random, generate array of all indexes, shuffle and halve it
+    let mut genes_to_cross: Vec<usize> = (0..total_elements).collect();
+    genes_to_cross.shuffle(rng);
+    genes_to_cross = genes_to_cross[..total_elements/2].to_vec();
+    
 
     // Initialize the child as a clone of p1
     let mut child = p1.clone();
 
-    for _ in 0..(k/2) {
-        let element = rng.gen_range(0..k);
+    for element in genes_to_cross {
         child.insert(element, *p2.get_cluster_index_for(element).unwrap());
     }
 
@@ -58,7 +65,7 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
     // Generational schema parameters
     let crossovers_per_pop = (0.7 * (pop_size as f64 / 2.0)) as u32; 
     let mutations_per_pop = 0.1 * problem.data(0).len() as f64;
-    let evaluations = 100000;
+    let evaluations = 100;
 
     // Step 1: random population
     let mut current_population = Partition::random_population(problem, pop_size, rng);
@@ -83,17 +90,16 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
             if i/2 < crossovers_per_pop as usize {
                 new_population.push(uniform_crossover(p1, p2, rng)); 
                 new_population.push(uniform_crossover(p1, p2, rng));
-                println!("Yee");
             }
             else {
                 new_population.push(p1.clone());
                 new_population.push(p2.clone());
-                println!("Yoo");
             }
         }
 
-
         // Mutate population
+        
+
         // Replace previous population (with elitism)
     }
         
