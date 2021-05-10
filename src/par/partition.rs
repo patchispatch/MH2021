@@ -174,6 +174,12 @@ impl Partition {
     }
 }
 
+impl PartialEq for Partition {
+    fn eq(&self, other: &Self) -> bool {
+        self.cluster_index == other.cluster_index 
+    }
+}
+
 
 /// Representation of a cluster on a PAR problem
 /// ## Elements

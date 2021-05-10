@@ -34,10 +34,30 @@ fn fixed_segment_crossover(p1: &Partition, p2: &Partition) -> Partition {
     unimplemented!();
 }
 
-/// Mutates a partition using the **Uniform Mutation Operator**
-fn uniform_mutation(p: &mut Partition) {
-    // TODO: implement
-    unimplemented!();
+/// Mutates a population using the **Uniform Mutation Operator**
+fn uniform_mutation(population: &mut Vec<Partition>, mutations: u32, rng: &mut Pcg64) {
+    let total_elements = population[0].problem_size();
+    let k = population[0].k();
+
+    // Since cromosomes to cross are random, generate array of all indexes, shuffle and halve it
+    let mut cromosomes_to_mutate: Vec<usize> = (0..population.len()).collect();
+    cromosomes_to_mutate.shuffle(rng);
+    cromosomes_to_mutate = cromosomes_to_mutate[..mutations as usize].to_vec();
+
+    println!("{:?}", cromosomes_to_mutate);
+
+    for element in cromosomes_to_mutate {
+        let gene_to_mutate = rng.gen_range(0..total_elements);
+        let mut new_cluster = rng.gen_range(0..k);
+        
+        // If new cluster is the same as it was, select random cluster again
+        while *population[element].get_cluster_index_for(gene_to_mutate).unwrap() == new_cluster {
+            new_cluster = rng.gen_range(0..k);
+        } 
+
+        // Mutate
+        population[element].insert(gene_to_mutate, new_cluster); 
+    }
 }
 
 /// Selects the best partition between two and returns a copy of it
@@ -61,10 +81,9 @@ fn best<'a>(p1: &'a Partition, p2: &'a Partition, problem: &Problem) -> Partitio
 /// 
 /// Returns (final_partition: Partition, current_fitness: f64, inf: usize, deviation: f64)
 pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
-
     // Generational schema parameters
     let crossovers_per_pop = (0.7 * (pop_size as f64 / 2.0)) as u32; 
-    let mutations_per_pop = 0.1 * problem.data(0).len() as f64;
+    let mutations_per_pop = (0.1 * problem.data(0).len() as f64) as u32;
     let evaluations = 100;
 
     // Step 1: random population
@@ -88,7 +107,7 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
             let p2 = &parents[i+1];
 
             if i/2 < crossovers_per_pop as usize {
-                new_population.push(uniform_crossover(p1, p2, rng)); 
+                new_population.push(uniform_crossover(p1, p2, rng));
                 new_population.push(uniform_crossover(p1, p2, rng));
             }
             else {
@@ -98,11 +117,33 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
         }
 
         // Mutate population
+        uniform_mutation(&mut current_population, mutations_per_pop, rng);
         
 
         // Replace previous population (with elitism)
+        let mut previous_best = current_population[0].clone(); 
+        for element in current_population.iter() {
+            if problem.fitness(&element) < problem.fitness(&previous_best) {
+                previous_best = element.clone();
+            }
+        }
+
+        if !new_population.contains(&previous_best) {
+            let mut new_worst = new_population[0].clone();
+            for element in new_population.iter() {
+                if problem.fitness(&element) > problem.fitness(&new_worst) {
+                    new_worst = element.clone();
+                }
+            }
+
+            // Exclude the worst, insert the best
+            new_population.remove(new_population.iter().position(|x| *x == new_worst).expect("New worst not found")); 
+            new_population.push(previous_best);
+        }
     }
         
     
-    // Return best partition of the final population
+    // Return best partition of the final population 
+
+    // TODO: implement cmp for Partition
 } 
