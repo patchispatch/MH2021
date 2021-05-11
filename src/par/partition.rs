@@ -1,6 +1,7 @@
 use super::Problem;
 use std::collections::{HashSet, BTreeMap};
 use std::fmt;
+use std::cell::Cell;
 use rand::Rng;
 use na::DVector;
 use rand_pcg::Pcg64;
@@ -16,6 +17,7 @@ pub type Point = DVector<f64>;
 pub struct Partition {
     cluster_index: BTreeMap<usize, usize>,
     clusters: Vec<Cluster>,
+    fitness: Cell<Option<f64>>
 }
 
 
@@ -31,7 +33,8 @@ impl Partition {
 
         Partition {
             cluster_index: BTreeMap::new(),
-            clusters: clu
+            clusters: clu,
+            fitness: Cell::new(None)
         }
     }
 
@@ -43,7 +46,8 @@ impl Partition {
 
         let mut partition = Partition {
             cluster_index: BTreeMap::new(),
-            clusters: vec![Cluster::new(dim); problem.k()]
+            clusters: vec![Cluster::new(dim); problem.k()],
+            fitness: Cell::new(None)
         };
 
         for (index, _) in problem.get_data().iter().enumerate() {
@@ -90,9 +94,12 @@ impl Partition {
         // Insert in the new cluster and update the index
         self.clusters[cluster].insert(element);
         self.cluster_index.insert(element, cluster);
+
+        // Set the fitness buffer to None
+        self.fitness.set(None);
     }
 
-    /// Insert an element into a cluster and update its centroid
+    /// [DEPRECATED] Insert an element into a cluster and update its centroid 
     /// - element: usize - Index of element to insert
     /// - cluster: usize - Index of cluster 
     /// - problem: &Problem - Instance of the problem (needed to calculate new cluster centroid)
@@ -105,6 +112,9 @@ impl Partition {
         // Insert in the new cluster and update the index
         self.clusters[cluster].insert_and_update(element, problem);
         self.cluster_index.insert(element, cluster);
+
+        // Set the fitness buffer to None
+        self.fitness.set(None);
     }
 
     /// Generate a neighbour by changing `element` to `cluster`
@@ -127,16 +137,35 @@ impl Partition {
     /// Checks if a partition is valid
     /// A partition is considered valid when there is no empty clusters inside it
     pub fn is_valid(&self) -> bool {
-        // TODO: implement
-        unimplemented!();
+        if self.clusters.iter().filter(|x| x.is_empty()).next().is_none() {
+            true
+        }
+        else {
+            false
+        }
     }
 
     /// Randomly repairs an invalid partition, moving an element to its empty clusters
     /// #### Arguments
     /// - rng: &mut Pcg64 - Random number generator
     pub fn repair(&mut self, rng: &mut Pcg64) {
-        // TODO: implement
-        unimplemented!();
+        let clusters_to_repair: Vec<usize> = self.clusters
+            .iter()
+            .enumerate()
+            .filter(|&(_, c)| c.is_empty())
+            .map(|(i, _)| i)
+            .collect();
+
+        for cluster in clusters_to_repair { 
+            // Pick an element and check if its cluster will still be valid
+            let mut random_element = rng.gen_range(0..self.problem_size());
+            while self.clusters[*self.get_cluster_index_for(random_element).unwrap()].len() <= 1 {
+                random_element = (random_element + 1) % self.problem_size();
+            }
+
+            // Repair invalid cluster 
+            self.clusters[cluster].insert(random_element);
+        }
     }
 
     /// Return number of clusters
@@ -171,6 +200,19 @@ impl Partition {
     /// Returns *None* if not in the index
     pub fn get_cluster_index_for(&self, element: usize) -> Option<&usize> {
         self.cluster_index.get(&element)
+    }
+
+    /// Return fitness of the partition
+    /// - problem: &Problem - Instance of the problem
+    pub fn fitness(&self, problem: &Problem) -> f64 {
+        if let Some(fit) = self.fitness.get() {
+            fit
+        }
+        else {
+            let fit = problem.fitness(self);
+            self.fitness.set(Some(fit));
+            fit
+        }
     }
 }
 

@@ -16,12 +16,16 @@ fn uniform_crossover(p1: &Partition, p2: &Partition, rng: &mut Pcg64) -> Partiti
     genes_to_cross.shuffle(rng);
     genes_to_cross = genes_to_cross[..total_elements/2].to_vec();
     
-
     // Initialize the child as a clone of p1
     let mut child = p1.clone();
 
     for element in genes_to_cross {
         child.insert(element, *p2.get_cluster_index_for(element).unwrap());
+    }
+
+    // If the child is not valid, repair it
+    if !child.is_valid() {
+        child.repair(rng);
     }
 
     child
@@ -44,8 +48,6 @@ fn uniform_mutation(population: &mut Vec<Partition>, mutations: u32, rng: &mut P
     cromosomes_to_mutate.shuffle(rng);
     cromosomes_to_mutate = cromosomes_to_mutate[..mutations as usize].to_vec();
 
-    println!("Cromosomes to mutate: {:?}", cromosomes_to_mutate);
-
     for element in cromosomes_to_mutate {
         let gene_to_mutate = rng.gen_range(0..total_elements);
         let mut new_cluster = rng.gen_range(0..k);
@@ -65,7 +67,7 @@ fn uniform_mutation(population: &mut Vec<Partition>, mutations: u32, rng: &mut P
 /// - **p1: &'a partition** First partition
 /// - **p2: &'a partition** Second partition
 fn best<'a>(p1: &'a Partition, p2: &'a Partition, problem: &Problem) -> Partition {
-    if problem.fitness(p1) >= problem.fitness(p2) {
+    if p1.fitness(problem) >= p2.fitness(problem) {
         p1.clone()
     }
     else {
@@ -80,18 +82,17 @@ fn best<'a>(p1: &'a Partition, p2: &'a Partition, problem: &Problem) -> Partitio
 /// - rng: &mut rand_pcg::Pcg64 - Random number generator
 /// 
 /// Returns (final_partition: Partition, current_fitness: f64, inf: usize, deviation: f64)
-pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
+pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) -> (Partition, f64, usize, f64) {
     // Generational schema parameters
-    let crossovers_per_pop = (0.7 * (pop_size as f64 / 2.0)) as u32; 
+    let crossovers_per_pop = (0.7 * (pop_size as f64 / 2.0)) as u32;
     let mutations_per_pop = (0.1 * problem.len() as f64) as u32;
-    let evaluations = 100;
+    let generations = 100000 / pop_size;
 
-    // Step 1: random population
+    // Start with random population
     let mut current_population = Partition::random_population(problem, pop_size, rng);
-    let population_fitness = ();
     
-    for _ in 0..evaluations {
-        let mut new_population: Vec<Partition> = Vec::new(); 
+    for _ in 0..generations {
+        let mut new_population: Vec<Partition> = Vec::new();
 
         // Select parent population by choosing random partitions and selecting the best
         let mut parents = Vec::new();
@@ -121,13 +122,13 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
 
         // Replace previous population (with elitism)
         current_population.sort_by(|a, b| {
-            problem.fitness(&a).partial_cmp(&problem.fitness(&b)).unwrap()
+            a.fitness(problem).partial_cmp(&b.fitness(problem)).unwrap()
         }); 
         let previous_best = current_population[0].clone();
 
         if !new_population.contains(&previous_best) {
             new_population.sort_by(|a, b| {
-                problem.fitness(&b).partial_cmp(&problem.fitness(&a)).unwrap()
+                b.fitness(problem).partial_cmp(&a.fitness(problem)).unwrap()
             });
             let new_worst = new_population[0].clone();
 
@@ -142,6 +143,13 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
     
     // Return best partition of the final population 
     current_population.sort_by(|a, b| {
-        problem.fitness(&a).partial_cmp(&problem.fitness(&b)).unwrap()
+        a.fitness(problem).partial_cmp(&b.fitness(problem)).unwrap()
     });
+
+    let mut final_partition = current_population[0].clone();
+    let final_fitness = final_partition.fitness(problem);
+    let infeasibility = problem.calc_infeasiblity(final_partition.cluster_index());
+    let deviation = problem.general_deviation(final_partition.clusters());
+
+    (final_partition, final_fitness, infeasibility, deviation)
 } 

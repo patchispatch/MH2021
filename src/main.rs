@@ -48,11 +48,29 @@ fn main() {
     // Test purposes
     else {
         instances.insert("zoo10", Problem::from_files("instances/zoo_set.dat", "instances/zoo_set_const_10.const", 7));
+        seeds = vec![4, 7, 2, 1, 3];
 
-        for (_, instance) in instances.iter() {
-            let seed = 4;
-            let mut rng = Pcg64::seed_from_u64(seed);
-            generational_genetic(&instance, 50, &mut rng);
+        for (key, instance) in instances.iter() {
+            println!("Executing generational genetic for instance {}", key);
+            let mut wtr = csv::Writer::from_path(format!("results/generational-genetic/{}.csv", key)).unwrap();
+            for seed in seeds.iter() {
+                print!("Seed {}: ", seed);
+                stdout().flush().unwrap();
+                let mut rng = Pcg64::seed_from_u64(*seed);
+                let now = Instant::now();
+                let (_partition, aggr, inf, dev) = generational_genetic(&instance, 50, &mut rng);
+                let time = now.elapsed().as_millis();
+            
+                wtr.serialize(ExecutionRecord {
+                    instance: *seed as usize,
+                    aggregate: aggr,
+                    infeasibility: inf,
+                    general_deviation: dev,
+                    time: time,
+                }).unwrap();
+                print!("{}\n", "OK".bold().green());
+            }
+            wtr.flush().unwrap();
         }
     }
 
