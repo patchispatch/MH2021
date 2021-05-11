@@ -44,7 +44,7 @@ fn uniform_mutation(population: &mut Vec<Partition>, mutations: u32, rng: &mut P
     cromosomes_to_mutate.shuffle(rng);
     cromosomes_to_mutate = cromosomes_to_mutate[..mutations as usize].to_vec();
 
-    println!("{:?}", cromosomes_to_mutate);
+    println!("Cromosomes to mutate: {:?}", cromosomes_to_mutate);
 
     for element in cromosomes_to_mutate {
         let gene_to_mutate = rng.gen_range(0..total_elements);
@@ -53,7 +53,7 @@ fn uniform_mutation(population: &mut Vec<Partition>, mutations: u32, rng: &mut P
         // If new cluster is the same as it was, select random cluster again
         while *population[element].get_cluster_index_for(gene_to_mutate).unwrap() == new_cluster {
             new_cluster = rng.gen_range(0..k);
-        } 
+        }
 
         // Mutate
         population[element].insert(gene_to_mutate, new_cluster); 
@@ -83,7 +83,7 @@ fn best<'a>(p1: &'a Partition, p2: &'a Partition, problem: &Problem) -> Partitio
 pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
     // Generational schema parameters
     let crossovers_per_pop = (0.7 * (pop_size as f64 / 2.0)) as u32; 
-    let mutations_per_pop = (0.1 * problem.data(0).len() as f64) as u32;
+    let mutations_per_pop = (0.1 * problem.len() as f64) as u32;
     let evaluations = 100;
 
     // Step 1: random population
@@ -118,32 +118,30 @@ pub fn generational_genetic(problem: &Problem, pop_size: u32, rng: &mut Pcg64) {
 
         // Mutate population
         uniform_mutation(&mut current_population, mutations_per_pop, rng);
-        
 
         // Replace previous population (with elitism)
-        let mut previous_best = current_population[0].clone(); 
-        for element in current_population.iter() {
-            if problem.fitness(&element) < problem.fitness(&previous_best) {
-                previous_best = element.clone();
-            }
-        }
+        current_population.sort_by(|a, b| {
+            problem.fitness(&a).partial_cmp(&problem.fitness(&b)).unwrap()
+        }); 
+        let previous_best = current_population[0].clone();
 
         if !new_population.contains(&previous_best) {
-            let mut new_worst = new_population[0].clone();
-            for element in new_population.iter() {
-                if problem.fitness(&element) > problem.fitness(&new_worst) {
-                    new_worst = element.clone();
-                }
-            }
+            new_population.sort_by(|a, b| {
+                problem.fitness(&b).partial_cmp(&problem.fitness(&a)).unwrap()
+            });
+            let new_worst = new_population[0].clone();
 
             // Exclude the worst, insert the best
-            new_population.remove(new_population.iter().position(|x| *x == new_worst).expect("New worst not found")); 
-            new_population.push(previous_best);
+            new_population.remove(new_population.iter().position(|x| *x == new_worst).expect("New worst not found"));
+            new_population.push(previous_best.clone());
         }
+
+        // Replace population
+        current_population = new_population;
     }
-        
     
     // Return best partition of the final population 
-
-    // TODO: implement cmp for Partition
+    current_population.sort_by(|a, b| {
+        problem.fitness(&a).partial_cmp(&problem.fitness(&b)).unwrap()
+    });
 } 
